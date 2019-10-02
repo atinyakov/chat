@@ -29,9 +29,17 @@ io.on('connection', function (socket) {
   });
   socket.on('receiveHistory', ()=>{
     //localStorage
-  })
-
+  });
+  socket.on('add user', (user) => {
+    console.log('add user', user)
+    users.push(user);
+    // console.log(users)
+    io.emit('user joined', user);
+  });
 });
+
+
+
 // io.on('send mess', (data) => {
 //   io.socket.emit('new mess', messageData);
 // });
