@@ -31,7 +31,7 @@ io.on('connection', function (socket) {
     //localStorage
   });
   socket.on('add user', (user) => {
-    console.log('add user', user)
+    // console.log('add user', user)
     users.push(user);
     // console.log(users)
     io.emit('user joined', user);

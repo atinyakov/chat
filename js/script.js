@@ -21,6 +21,8 @@ document.addEventListener('DOMContentLoaded', function() {
     templateOfUsers = document.querySelector('#listOfUsers').textContent,
     renderUsers = Handlebars.compile(templateOfUsers),
     renderMessages = Handlebars.compile(templateOfMessage),
+    inputFile = document.querySelector('#inputFile'),
+    avatarImage = document.querySelector('#avatarImage');
 
     users = [],
     messagesListOnPage = [],
@@ -54,6 +56,13 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   function addMessage(message){
+
+    users.forEach(({nickname, username}) => {
+      // console.log(users)
+      if( message.username == username) {
+        message.username = nickname;
+      }
+    })
     
     messagesListOnPage.push(message);
     let messagesList = renderMessages(messagesListOnPage);
@@ -62,14 +71,13 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   authBtn.addEventListener('click', (e) => {
-    // var socket = io();
       e.preventDefault(); // prevents page reloading
 
-      let user = {name: name.value, username: nickname.value}
-      // console.log(user)
-      socket.emit('add user', user);
-      console.log('user', user)
+      let user = {name: name.value, nickname: nickname.value, username: socket.id}
 
+      socket.emit('add user', user);
+
+      nameOfuser.textContent = nickname.value;
       authPopup.style.display = 'none';
       name.value = '';
       nickname.value = '';
@@ -77,23 +85,59 @@ document.addEventListener('DOMContentLoaded', function() {
       sendBtn.removeAttribute('disabled');
   })
 
+  // <<<<<<<<<< аватар
+
+  loadPhoto.addEventListener('click', (e) => {
+    e.preventDefault(); // prevents page reloading
+    fileLoadPopup.classList.add('active')
+  });
+
+  cancel.addEventListener('click', (e) => {
+    e.preventDefault(); // prevents page reloading
+    fileLoadPopup.classList.remove('active')
+  });
+
+  inputFile.addEventListener('change', (evt) => {
+
+    var reader = new FileReader();
+
+    reader.onload = function (e) {
+        // get loaded data and render thumbnail.
+        document.querySelector('#image').src = e.target.result;
+        document.querySelector('#image').classList.add('image_input-add');
+        document.querySelector('.fileload__modal_input').classList.add('no-before');
+    };
+
+    // read the image file as a data URL.
+    reader.readAsDataURL(evt.target.files[0]);
+
+  });
+
+  sendPhoto.addEventListener('click', (evt) => {
+    evt.preventDefault();
+
+    let image = document.querySelector('#image').src
+    let photoText = document.querySelector('.no_photo');
+    let usersBlock = document.querySelector('.users__block_image')
+
+
+    if(image !== '') {
+      avatarImage.src = image;
+      photoText.classList.add('no_photo-o');
+      document.querySelector('#image').src = '';
+      fileLoadPopup.classList.remove('active');
+      usersBlock.classList.add('users__block_image-add');
+    }
+
+  });
+
+  // >>>>>>>>>>> аватар
+
   socket.on('user joined', (user) => {
-      // let user = document.createElement('li');
-      // user.textContent = `${user.value}`
-      // usersList.appendChild(user);
-      // users.forEach(user => {'
       users.push(user);
-
-        // console.log(user)
-        let {name, username} = user;
-        renderUsers(users)
-
-        // let listItem = document.createElement('li');
-        // listItem.textContent = `${name} ${username}`
-        // usersList.appendChild(listItem);
-
-      // })
-      // console.log('data', data);
+      let usersActiveList = renderUsers(users);
+      
+      usersList.innerHTML = usersActiveList;
   });
 
 });
