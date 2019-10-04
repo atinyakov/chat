@@ -7,6 +7,9 @@ let users = [];
 let connections = [];
 
 
+var fs = require('fs');
+ 
+
 app.use(express.static(__dirname));
 //указываем корневую деректорию
 app.get('/', function (req, res) {
@@ -35,6 +38,35 @@ io.on('connection', function (socket) {
     users.push(user);
     // console.log(users)
     io.emit('user joined', user);
+  });
+
+  socket.on('upload file', (__filename, file, id) => {
+    let userUploadedImagePath = `./img/avatars/${__filename}`;
+
+    fs.writeFile(userUploadedImagePath, file, 'base64', function(err){
+        if (err) throw err;
+        console.log('File saved.');
+
+        users.forEach(user => {
+          // console.log(users)
+          if( id == user.username) {
+            user.avatar = __filename;
+          }
+        })
+
+      io.emit('uploaded file', users);
+    })
+
+  });
+
+  socket.on('get avatar', (__filename) => {
+    
+    fs.readFile(`./img/avatars/${__filename}`, "utf8", function(err, data){
+      if (err) throw err;
+
+      io.emit('set avatar', data);
+
+    });
   });
 });
 

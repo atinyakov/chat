@@ -57,17 +57,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
   function addMessage(message){
 
-    users.forEach(({nickname, username}) => {
+    users.forEach(({nickname, username, avatar}) => {
       // console.log(users)
       if( message.username == username) {
         message.username = nickname;
+
+
+        socket.emit('get avatar', avatar);
+        socket.on('set avatar', data => {
+          message.src = data;
+        });
       }
+
+
     })
     
     messagesListOnPage.push(message);
     let messagesList = renderMessages(messagesListOnPage);
           messages.innerHTML = messagesList;
           messageContainer.scrollTop = messageContainer.scrollHeight;
+    
   }
 
   authBtn.addEventListener('click', (e) => {
@@ -106,10 +115,13 @@ document.addEventListener('DOMContentLoaded', function() {
         document.querySelector('#image').src = e.target.result;
         document.querySelector('#image').classList.add('image_input-add');
         document.querySelector('.fileload__modal_input').classList.add('no-before');
+
     };
 
     // read the image file as a data URL.
     reader.readAsDataURL(evt.target.files[0]);
+
+    socket.emit('upload file', evt.target.files[0].name, evt.target.files[0], socket.id);
 
   });
 
@@ -139,5 +151,9 @@ document.addEventListener('DOMContentLoaded', function() {
       
       usersList.innerHTML = usersActiveList;
   });
+  
 
+  socket.on('uploaded file', (userlist) => {
+      users = userlist;
+  });
 });

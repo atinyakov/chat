@@ -73,7 +73,7 @@
 <script id="messageList" type="text/x-handlebars-template">
   {{#each this}}
   <li>
-      <img id= "messagesPhoto" onchange= "sendImg()" src="" alt="" style="width:70px; height: 70px; border-radius: 70px; box-shadow: none">
+      <img id= "messagesPhoto" onchange= "sendImg()" src="{{src}}" alt="" style="width:70px; height: 70px; border-radius: 70px; box-shadow: none">
       <span>{{date}}</span>
       <span>{{username}}</span>
       <span>{{content}}</span>
