@@ -158,7 +158,7 @@ body {
 }
 
 .authorization__modal_input:focus {
-  color=#ccc;
+  color: #ccc;
   box-shadow: 0 2px 2px rgba(0, 0, 0, .008), 0 0 10px rgba(205, 92, 92, .6);
   outline: none;
 }

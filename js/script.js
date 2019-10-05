@@ -26,50 +26,43 @@ document.addEventListener('DOMContentLoaded', function() {
 
     users = [],
     messagesListOnPage = [],
+    
+    storage = localStorage;
 
     socket = io.connect('http://localhost:3000/');
 
-  socket.on('connected', function (msg) {
-      console.log(msg);
-      //socket.emit('receiveHistory');
+  socket.on('connected', function (userList, messages) {
+    if(userList.length !== 0) {
+      users = userList;
+    }
+    if(messages.length !== 0) {
+      messages.forEach(addMessage);
+    }
   });
 
   socket.on('message', addMessage);
 
   sendBtn.addEventListener('click', (event) => {
     event.preventDefault();
-
     let messageData = messageText.value.trim();
-    let messageInfo = {
-      // name: name.value.trim() + ':',
-      message: messageData
-    };
 
-    
     if(messageData.length == 0){
       
       messageText.classList.add('message__form_input-error');
     }
     socket.emit('msg', messageData);
     messageText.value = '';
-      
   });
 
   function addMessage(message){
 
     users.forEach(({nickname, username, avatar}) => {
-      // console.log(users)
+
       if( message.username == username) {
         message.username = nickname;
 
-
-        socket.emit('get avatar', avatar);
-        socket.on('set avatar', data => {
-          message.src = data;
-        });
+        message.src = `./img/avatars/${avatar}`;
       }
-
-
     })
     
     messagesListOnPage.push(message);

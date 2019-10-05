@@ -4,11 +4,9 @@ const http = require('http').Server(app);
 const io = require('socket.io')(http, {serveClient: true});
 
 let users = [];
-let connections = [];
+let messages = [];
 
-
-var fs = require('fs');
- 
+const fs = require('fs');
 
 app.use(express.static(__dirname));
 //указываем корневую деректорию
@@ -18,7 +16,7 @@ app.get('/', function (req, res) {
 
 io.on('connection', function (socket) {
   
-  socket.emit('connected', 'a user connected')
+  socket.emit('connected', users, messages )
 
   socket.join('all')
   socket.on('msg', function (msg) {
@@ -27,16 +25,13 @@ io.on('connection', function (socket) {
       content: msg,
       username: socket.id
     }
+    messages.push(obj)
     socket.emit('message', obj)
     socket.to('all').emit('message', obj)
   });
-  socket.on('receiveHistory', ()=>{
-    //localStorage
-  });
+
   socket.on('add user', (user) => {
-    // console.log('add user', user)
     users.push(user);
-    // console.log(users)
     io.emit('user joined', user);
   });
 
@@ -48,7 +43,6 @@ io.on('connection', function (socket) {
         console.log('File saved.');
 
         users.forEach(user => {
-          // console.log(users)
           if( id == user.username) {
             user.avatar = __filename;
           }
@@ -68,14 +62,11 @@ io.on('connection', function (socket) {
 
     });
   });
+
+  
 });
 
 
-
-// io.on('send mess', (data) => {
-//   io.socket.emit('new mess', messageData);
-// });
-//localhost:3000
 http.listen(3000, function () {
   console.log('listening on *:3000');
 });
