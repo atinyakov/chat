@@ -50,6 +50,7 @@ document.addEventListener('DOMContentLoaded', function() {
       
       messageText.classList.add('message__form_input-error');
     }
+
     socket.emit('msg', messageData);
     messageText.value = '';
   });
@@ -60,6 +61,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
       if( message.username == username) {
         message.username = nickname;
+
+        if (avatar === undefined) {
+          message.src = `./img/default-avatar.png`;
+          return;
+        }
 
         message.src = `./img/avatars/${avatar}`;
       }

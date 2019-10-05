@@ -36,6 +36,7 @@ io.on('connection', function (socket) {
   });
 
   socket.on('upload file', (__filename, file, id) => {
+
     let userUploadedImagePath = `./img/avatars/${__filename}`;
 
     fs.writeFile(userUploadedImagePath, file, 'base64', function(err){
