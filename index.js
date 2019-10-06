@@ -15,6 +15,8 @@ app.get('/', function (req, res) {
 });
 
 io.on('connection', function (socket) {
+  console.log('after connection', messages)
+
   
   socket.emit('connected', users, messages )
 
@@ -26,6 +28,7 @@ io.on('connection', function (socket) {
       username: socket.id
     }
     messages.push(obj)
+    console.log(messages)
     socket.emit('message', obj)
     socket.to('all').emit('message', obj)
   });
@@ -64,7 +67,12 @@ io.on('connection', function (socket) {
     });
   });
 
-  
+  // socket.on('disconnect', function () {
+  //   let pos = users.indexOf(user);
+  //   users.splice(pos, 1);
+  //   console.log('выход');
+  //   io.emit('userUpdate', users);
+  // });
 });
 
 
