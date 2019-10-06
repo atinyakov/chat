@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', function() {
     container = document.querySelector('.container'),
     nameOfuser = document.querySelector('.users__block_name'),
     members = document.querySelector('.users__block_members'),
-    usersList = document.querySelector('#usersList'),
+
     messagesPhoto = document.querySelector('#messagesPhoto'),
     templateOfMessage = document.querySelector('#messageList').textContent,
     templateOfUsers = document.querySelector('#listOfUsers').textContent,
@@ -29,8 +29,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     socket = io.connect('http://localhost:3000/');
 
+    let photoText = document.querySelector('.no_photo');
+    let usersBlock = document.querySelector('.users__block_image');
+
   socket.on('connected', function (userList, messages) {
-    console.log('messages', messages)
 
     if(userList.length !== 0) {
       users = userList;
@@ -39,6 +41,15 @@ document.addEventListener('DOMContentLoaded', function() {
       messagesListOnPage = messages;
     }
   });
+  
+
+  socket.on('userUpdate', data =>  {
+    users = data;
+    document.querySelector('#usersList').innerHTML = ''
+    showUsers();
+    }
+  );
+
 
   socket.on('message', addMessage);
 
@@ -56,43 +67,40 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   function addMessage(message){
+    messagesListOnPage.push(message);
+    renderMsg(message)
+  }
 
+  function renderMsg (message) {
     users.forEach(({nickname, username, avatar}) => {
 
       if( message.username == username) {
         message.username = nickname;
 
-        if (avatar === undefined) {
-          message.src = `./img/default-avatar.png`;
-          return;
-        }
-
         message.src = `./img/avatars/${avatar}`;
       }
     })
-    
-    messagesListOnPage.push(message);
+
     let messagesList = renderMessages(messagesListOnPage);
-          messages.innerHTML = messagesList;
-          messageContainer.scrollTop = messageContainer.scrollHeight;
-    
+        messages.innerHTML = messagesList;
+        messageContainer.scrollTop = messageContainer.scrollHeight;
   }
 
+  function showUsers () {
+    let usersActiveList = renderUsers(users);
+    usersList.innerHTML = usersActiveList;
+  }
+  
   function isCurrentUser (users, activeUser) {
-    
     let index = users.findIndex(user => user.nickname === activeUser.nickname);
 
     return index;
-
-    // console.log(index)
-    // return (index !== -1) ? true : false;
   }
 
   authBtn.addEventListener('click', (e) => {
       e.preventDefault(); // prevents page reloading
-      console.log('auth btn click')
 
-      let currentUser = {name: name.value, nickname: nickname.value, username: socket.id}
+      let currentUser = {name: name.value, nickname: nickname.value, username: socket.id, avatar : 'default-avatar.png'}
 
       if(users.length === 0 ) {
         socket.emit('add user', currentUser);
@@ -101,15 +109,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (current === -1) {
             socket.emit('add user', currentUser); 
-            let usersActiveList = renderUsers(users);
-            console.log('here')
-            usersList.innerHTML = usersActiveList;
+            showUsers();
         }
         if (current !== -1) {
-          let usersActiveList = renderUsers(users);
-          usersList.innerHTML = usersActiveList;
-
-          users[current].avatar = (users[current].avatar !== undefined) ? user.avatar : 'default-avatar.png'
+          showUsers();
 
           avatarImage.src = `./img/avatars/${users[current].avatar}`
           usersBlock.classList.add('users__block_image-add');
@@ -117,38 +120,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       }
 
-
       if(messagesListOnPage.length !== 0) {
-        console.log(messagesListOnPage)
-        messagesListOnPage.forEach(addMessage);
+        messagesListOnPage.forEach(renderMsg);
       }
-
-
-
-      // } else {
-      //     users.forEach(user => {
-      //     if (user.nickname !== nickname.value) {
-      //       socket.emit('add user', currentUser); 
-      //       let usersActiveList = renderUsers(users);
-      
-      //       usersList.innerHTML = usersActiveList;
-      //     } else if (user.nickname === nickname.value) {
-      //       let usersActiveList = renderUsers(users);
-      //       debugger
-      
-      //       usersList.innerHTML = usersActiveList;
-
-      //       user.avatar = (user.avatar !== undefined) ? user.avatar : 'default-avatar.png'
-
-      //       avatarImage.src = `./img/avatars/${user.avatar}`
-      //       usersBlock.classList.add('users__block_image-add');
-      //       photoText.classList.add('no_photo-o');
-      //     }
-      //   })
-      // }
-
-
-
 
       nameOfuser.textContent = nickname.value;
       authPopup.style.display = 'none';
@@ -189,9 +163,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
   });
 
-    let photoText = document.querySelector('.no_photo');
-    let usersBlock = document.querySelector('.users__block_image');
-
   sendPhoto.addEventListener('click', (evt) => {
     evt.preventDefault();
 
@@ -211,16 +182,8 @@ document.addEventListener('DOMContentLoaded', function() {
   // >>>>>>>>>>> аватар
 
   socket.on('user joined', (user) => {
-
-    // users.forEach(currentUser => {
-    //   if (currentUser.name === user.name) {
-        users.push(user);
-    //   }
-    // })
-
-      let usersActiveList = renderUsers(users);
-      
-      usersList.innerHTML = usersActiveList;
+    users.push(user);
+    showUsers();
   });
   
 
