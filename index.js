@@ -79,8 +79,7 @@ io.on('connection', function (socket) {
   });
 
   socket.on('send update avatars', () => {
-    io.emit('update avatars');
-    io.to('all').emit('update avatars')
+    socket.broadcast.emit('update avatars');
   })
 
 
@@ -89,11 +88,6 @@ io.on('connection', function (socket) {
 
     users[index].username = update.username;
 
-    // messages.forEach(msg => {
-    //   if(msg.username === ) {
-
-    //   }
-    // })
     currentUsers.push(update);
 
     io.emit('userDBUpdate', users);
