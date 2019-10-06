@@ -5,6 +5,8 @@ const io = require('socket.io')(http, {serveClient: true});
 
 let users = [];
 let messages = [];
+let currentUsers = [];
+
 
 const fs = require('fs');
 
@@ -15,14 +17,17 @@ app.get('/', function (req, res) {
 });
 
 io.on('connection', function (socket) {
-  socket.emit('connected', users, messages )
+  socket.emit('connected', users,  messages, currentUsers)
 
   socket.join('all')
   socket.on('msg', function (msg) {
+
+    let index = users.findIndex(user => user.username === socket.id);
+
     const obj = {
       date: new Date(),
       content: msg,
-      username: socket.id
+      username: users[index].nickname
     }
     messages.push(obj)
 
@@ -32,6 +37,7 @@ io.on('connection', function (socket) {
 
   socket.on('add user', (user) => {
     users.push(user);
+    currentUsers.push(user);
     io.emit('user joined', user);
   });
 
@@ -48,8 +54,16 @@ io.on('connection', function (socket) {
             user.avatar = __filename;
           }
         })
+        currentUsers.forEach(user => {
+          if( id == user.username) {
+            user.avatar = __filename;
+          }
+        })
+        
 
       io.emit('uploaded file', users);
+      io.to('all').emit('uploaded file', users)
+
     })
 
   });
@@ -64,12 +78,35 @@ io.on('connection', function (socket) {
     });
   });
 
-  socket.on('disconnect', function () {
-    let pos = users.indexOf(socket);
-    users.splice(pos, 1);
-    console.log('выход');
+  socket.on('send update avatars', () => {
+    io.emit('update avatars');
+    io.to('all').emit('update avatars')
+  })
 
-    io.emit('userUpdate', users);
+
+  socket.on('update username', update => {
+    let index = users.findIndex(user => user.nickname === update.nickname);
+
+    users[index].username = update.username;
+
+    // messages.forEach(msg => {
+    //   if(msg.username === ) {
+
+    //   }
+    // })
+    currentUsers.push(update);
+
+    io.emit('userDBUpdate', users);
+
+  })
+
+  socket.on('disconnect', function () {
+    let index = currentUsers.findIndex(user => user.username === socket.id);
+
+    currentUsers.splice(index, 1);
+    console.log('exit');
+
+    io.emit('userUpdate', currentUsers);
   });
 });
 

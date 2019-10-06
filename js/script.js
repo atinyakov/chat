@@ -24,34 +24,45 @@ document.addEventListener('DOMContentLoaded', function() {
     inputFile = document.querySelector('#inputFile'),
     avatarImage = document.querySelector('#avatarImage');
 
-    users = [],
+    usersDB = [],
     messagesListOnPage = [],
+    currentUsers = []
 
     socket = io.connect('http://localhost:3000/');
 
     let photoText = document.querySelector('.no_photo');
     let usersBlock = document.querySelector('.users__block_image');
 
-  socket.on('connected', function (userList, messages) {
+  socket.on('connected', function (userList, messages, currentUsr) {
 
     if(userList.length !== 0) {
-      users = userList;
+      usersDB = userList;
     }
     if(messages.length !== 0) {
       messagesListOnPage = messages;
+    }
+
+    if(currentUsr.length !== 0) {
+      currentUsers = currentUsr;
     }
   });
   
 
   socket.on('userUpdate', data =>  {
-    users = data;
+    currentUsers = data;
     document.querySelector('#usersList').innerHTML = ''
-    showUsers();
+    showUsers(currentUsers);
     }
   );
 
+  socket.on('userDBUpdate', data =>  {
+    usersDB = data;
+    }
+  );
 
-  socket.on('message', addMessage);
+  socket.on('message', msg => {
+    addMessage(msg)
+  });
 
   sendBtn.addEventListener('click', (event) => {
     event.preventDefault();
@@ -72,27 +83,27 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function renderMsg (message) {
-    users.forEach(({nickname, username, avatar}) => {
 
-      if( message.username == username) {
-        message.username = nickname;
+    usersDB.forEach(({nickname, avatar}) => {
 
+      if( message.username == nickname) {
         message.src = `./img/avatars/${avatar}`;
       }
     })
 
     let messagesList = renderMessages(messagesListOnPage);
-        messages.innerHTML = messagesList;
-        messageContainer.scrollTop = messageContainer.scrollHeight;
+
+    messages.innerHTML = messagesList;
+    messageContainer.scrollTop = messageContainer.scrollHeight;
   }
 
-  function showUsers () {
+  function showUsers (users) {
     let usersActiveList = renderUsers(users);
     usersList.innerHTML = usersActiveList;
   }
   
-  function isCurrentUser (users, activeUser) {
-    let index = users.findIndex(user => user.nickname === activeUser.nickname);
+  function isCurrentUser (usersDB, activeUser) {
+    let index = usersDB.findIndex(user => user.nickname === activeUser.nickname);
 
     return index;
   }
@@ -102,19 +113,27 @@ document.addEventListener('DOMContentLoaded', function() {
 
       let currentUser = {name: name.value, nickname: nickname.value, username: socket.id, avatar : 'default-avatar.png'}
 
-      if(users.length === 0 ) {
+      if(usersDB.length === 0 ) {
         socket.emit('add user', currentUser);
       } else {
-        let current = isCurrentUser(users, currentUser) //returns index of user if it is in DB
+        let current = isCurrentUser(usersDB, currentUser) //returns index of user if it is in DB
 
         if (current === -1) {
             socket.emit('add user', currentUser); 
-            showUsers();
+            showUsers(currentUsers);
         }
         if (current !== -1) {
-          showUsers();
+          //update current 
+          socket.emit('update username', currentUser);
 
-          avatarImage.src = `./img/avatars/${users[current].avatar}`
+          let index = currentUsers.findIndex(user => user.nickname === currentUser.nickname);        
+          if ( index === -1) {
+            currentUsers.push(currentUser);
+          }
+
+          showUsers(currentUsers);
+
+          avatarImage.src = `./img/avatars/${usersDB[current].avatar}`
           usersBlock.classList.add('users__block_image-add');
           photoText.classList.add('no_photo-o');
         }
@@ -132,7 +151,7 @@ document.addEventListener('DOMContentLoaded', function() {
       sendBtn.removeAttribute('disabled');
   })
 
-  // <<<<<<<<<< аватар
+  // <<<<<<<<<< avatar
 
   loadPhoto.addEventListener('click', (e) => {
     e.preventDefault(); // prevents page reloading
@@ -177,17 +196,29 @@ document.addEventListener('DOMContentLoaded', function() {
       usersBlock.classList.add('users__block_image-add');
     }
 
+    document.querySelector('.fileload__modal_input').classList.remove('no-before');
+
+
+    if(messagesListOnPage.length !== 0) {
+      socket.emit('send update avatars')
+    }
+
   });
 
-  // >>>>>>>>>>> аватар
+  socket.on('update avatars', () => {
+    document.querySelector('#messages').innerHTML = ''
+    messagesListOnPage.forEach(renderMsg);
+  })
+  // >>>>>>>>>>> avatar
 
   socket.on('user joined', (user) => {
-    users.push(user);
-    showUsers();
+    usersDB.push(user);
+    currentUsers.push(user);
+    showUsers(currentUsers);
   });
   
 
   socket.on('uploaded file', (userlist) => {
-      users = userlist;
+      usersDB = userlist;
   });
 });
