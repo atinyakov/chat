@@ -94,6 +94,11 @@ io.on('connection', function (socket) {
 
   })
 
+  socket.on('update userlist', (user) => {
+    currentUsers.push(user);
+    io.emit('userUpdate', currentUsers);
+  })
+
   socket.on('disconnect', function () {
     let index = currentUsers.findIndex(user => user.username === socket.id);
 

@@ -129,15 +129,10 @@ document.addEventListener('DOMContentLoaded', function () {
         showUsers(currentUsers);
       }
       if (current !== -1) {
-        //update current 
+        currentUsers.push(currentUser);
+
+        socket.emit('update userlist', currentUser);
         socket.emit('update username', currentUser);
-
-        let index = currentUsers.findIndex(user => user.nickname === currentUser.nickname);
-        if (index === -1) {
-          currentUsers.push(currentUser);
-        }
-
-        showUsers(currentUsers);
 
         avatarImage.src = `./img/avatars/${usersDB[current].avatar}`
         usersBlock.classList.add('users__block_image-add');
@@ -215,6 +210,7 @@ document.addEventListener('DOMContentLoaded', function () {
     document.querySelector('#messages').innerHTML = ''
     messagesListOnPage.forEach(renderMsg);
   })
+
   // >>>>>>>>>>> avatar
 
   socket.on('user joined', (user) => {
