@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', function () {
     inputFile = document.querySelector('#inputFile'),
     avatarImage = document.querySelector('#avatarImage');
 
-  usersDB = [],
+    usersDB = [],
     messagesListOnPage = [],
     currentUsers = []
 

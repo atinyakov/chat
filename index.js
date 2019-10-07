@@ -38,6 +38,7 @@ io.on('connection', function (socket) {
   socket.on('add user', (user) => {
     users.push(user);
     currentUsers.push(user);
+
     io.emit('user joined', user);
   });
 
@@ -79,23 +80,25 @@ io.on('connection', function (socket) {
   });
 
   socket.on('send update avatars', () => {
-    socket.broadcast.emit('update avatars');
+    io.emit('update avatars');
   })
 
 
   socket.on('update username', update => {
     let index = users.findIndex(user => user.nickname === update.nickname);
-
     users[index].username = update.username;
-
-    currentUsers.push(update);
 
     io.emit('userDBUpdate', users);
 
   })
 
   socket.on('update userlist', (user) => {
-    currentUsers.push(user);
+    let index = currentUsers.findIndex(user => user.username === socket.id);
+
+    if (index === -1) {
+      currentUsers.push(user);
+    }
+
     io.emit('userUpdate', currentUsers);
   })
 
